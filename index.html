@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>全栈学习进度看板</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: system-ui, sans-serif;
+      }
+      body {
+        background-color: #f4f7fa;
+        padding: 30px 16px;
+        max-width: 850px;
+        margin: 0 auto;
+      }
+      h1 {
+        text-align: center;
+        color: #222;
+        margin-bottom: 32px;
+      }
+      .chapter-item {
+        background: #fff;
+        border-radius: 12px;
+        padding: 18px 22px;
+        margin-bottom: 16px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        cursor: pointer;
+      }
+      .chapter-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+      }
+      .chapter-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #2d3748;
+        flex: 1;
+      }
+      .progress-wrap {
+        width: 40%;
+        height: 10px;
+        background: #e2e8f0;
+        border-radius: 99px;
+        overflow: hidden;
+      }
+      .progress-bar {
+        height: 100%;
+        background-color: #3b82f6;
+        border-radius: inherit;
+        transition: width 0.3s ease;
+      }
+      .task-list {
+        margin-top: 16px;
+        padding-top: 12px;
+        border-top: 1px solid #eee;
+        display: none;
+      }
+      .task-list.open {
+        display: block;
+      }
+      .task-item {
+        padding: 8px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .task-item input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+      }
+      .task-text {
+        font-size: 15px;
+        color: #4a5568;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>📚 全栈学习进度看板</h1>
+    <div class="container" id="container"></div>
+
+    <script>
+      // 按你的思维导图写的10个章节 + 任务
+      const defaultData = [
+        {
+          id: 1,
+          title: "00-学习方法论",
+          tasks: [
+            { id: 101, name: "00-如何高效学习编程", done: false },
+            { id: 102, name: "01-环境配置完全指南", done: false },
+            { id: 103, name: "02-Git与GitHub入门", done: false },
+            { id: 104, name: "03-命令行终端基础", done: false },
+            { id: 105, name: "04-VSCode与AI辅助编程", done: false },
+            { id: 106, name: "05-GitHub项目精选-入门导航", done: false },
+            { id: 107, name: "06-费曼学习法与笔记系统", done: false },
+            { id: 108, name: "07-反向工程别人的代码", done: false },
+          ],
+        },
+        {
+          id: 2,
+          title: "01-Python-从零到源码",
+          tasks: [
+            { id: 201, name: "Python基础语法", done: false },
+            { id: 202, name: "数据结构与文件操作", done: false },
+            { id: 203, name: "面向对象编程", done: false },
+            { id: 204, name: "项目实战练习", done: false },
+          ],
+        },
+        {
+          id: 3,
+          title: "02-JavaScript-从零到源码",
+          tasks: [
+            { id: 301, name: "JS基础语法", done: false },
+            { id: 302, name: "DOM、BOM操作", done: false },
+            { id: 303, name: "异步、Promise、async await", done: false },
+            { id: 304, name: "JS源码与执行机制", done: false },
+          ],
+        },
+        {
+          id: 4,
+          title: "03-HTML-CSS-现代Web",
+          tasks: [
+            { id: 401, name: "HTML语义化标签", done: false },
+            { id: 402, name: "CSS基础、选择器、盒模型", done: false },
+            { id: 403, name: "Flex、Grid布局", done: false },
+            { id: 404, name: "响应式、动画", done: false },
+          ],
+        },
+        {
+          id: 5,
+          title: "04-前端框架-React",
+          tasks: [
+            { id: 501, name: "React基础组件", done: false },
+            { id: 502, name: "Hooks", done: false },
+            { id: 503, name: "状态管理", done: false },
+            { id: 504, name: "React项目工程化", done: false },
+          ],
+        },
+        {
+          id: 6,
+          title: "05-后端开发-FastAPI-Node",
+          tasks: [
+            { id: 601, name: "HTTP接口基础", done: false },
+            { id: 602, name: "Node基础", done: false },
+            { id: 603, name: "FastAPI接口开发", done: false },
+            { id: 604, name: "接口联调", done: false },
+          ],
+        },
+        {
+          id: 7,
+          title: "06-数据库与工程化",
+          tasks: [
+            { id: 701, name: "SQL基础", done: false },
+            { id: 702, name: "数据库设计", done: false },
+            { id: 703, name: "工程化部署", done: false },
+            { id: 704, name: "项目CI/CD基础", done: false },
+          ],
+        },
+        {
+          id: 8,
+          title: "07-AI基础-Prompt与LLM",
+          tasks: [
+            { id: 801, name: "大模型基础概念", done: false },
+            { id: 802, name: "Prompt工程", done: false },
+            { id: 803, name: "LLM调用API", done: false },
+          ],
+        },
+        {
+          id: 9,
+          title: "08-AI-Agent-框架与源码",
+          tasks: [
+            { id: 901, name: "Agent基础原理", done: false },
+            { id: 902, name: "Agent框架使用", done: false },
+            { id: 903, name: "阅读Agent源码", done: false },
+          ],
+        },
+        {
+          id: 10,
+          title: "09-综合实战-毕业项目",
+          tasks: [
+            { id: 1001, name: "项目需求设计", done: false },
+            { id: 1002, name: "前后端联合开发", done: false },
+            { id: 1003, name: "AI能力接入", done: false },
+            { id: 1004, name: "部署上线+文档", done: false },
+          ],
+        },
+      ];
+
+      // 读取本地存储
+      function loadData() {
+        const save = localStorage.getItem("studyProgress");
+        if (save) {
+          return JSON.parse(save);
+        } else {
+          return defaultData;
+        }
+      }
+      // 保存数据到localStorage
+      function saveData(data) {
+        localStorage.setItem("studyProgress", JSON.stringify(data));
+      }
+
+      // 计算章节完成百分比
+      function calcProgress(tasks) {
+        const total = tasks.length;
+        const finished = tasks.filter((item) => item.done).length;
+        if (total === 0) return 0;
+        return Math.round((finished / total) * 100);
+      }
+
+      // 渲染页面
+      function render() {
+        const data = loadData();
+        const container = document.getElementById("container");
+        container.innerHTML = "";
+
+        data.forEach((chapter) => {
+          const percent = calcProgress(chapter.tasks);
+          const html = `
+    <div class="chapter-item" data-cid="${chapter.id}">
+      <div class="chapter-header">
+        <div class="chapter-title">${chapter.title}</div>
+        <div class="progress-wrap">
+          <div class="progress-bar" style="width:${percent}%"></div>
+        </div>
+      </div>
+      <div class="task-list">
+        ${chapter.tasks
+          .map(
+            (task) => `
+          <div class="task-item">
+            <input type="checkbox" data-cid="${chapter.id}" data-tid="${task.id}" ${task.done ? "checked" : ""}>
+            <span class="task-text">${task.name}</span>
+          </div>
+        `,
+          )
+          .join("")}
+      </div>
+    </div>
+    `;
+          container.innerHTML += html;
+        });
+
+        bindEvent();
+      }
+
+      // 绑定事件
+      function bindEvent() {
+        const items = document.querySelectorAll(".chapter-item");
+        items.forEach((item) => {
+          item.querySelector(".chapter-header").addEventListener("click", () => {
+            const taskList = item.querySelector(".task-list");
+            taskList.classList.toggle("open");
+          });
+        });
+        // checkbox变更
+        document.querySelectorAll(".task-item input").forEach((ck) => {
+          ck.addEventListener("change", (e) => {
+            const cid = Number(e.target.dataset.cid);
+            const tid = Number(e.target.dataset.tid);
+            const data = loadData();
+            // 修改任务状态
+            const chapter = data.find((c) => c.id === cid);
+            const task = chapter.tasks.find((t) => t.id === tid);
+            task.done = e.target.checked;
+            saveData(data);
+            const percent = calcProgress(chapter.tasks);
+            const chapterItem = document.querySelector(`.chapter-item[data-cid="${cid}"]`);
+            chapterItem.querySelector(".progress-bar").style.width = `${percent}%`;
+          });
+        });
+      }
+
+      // 初始化
+      render();
+    </script>
+  </body>
+</html>
